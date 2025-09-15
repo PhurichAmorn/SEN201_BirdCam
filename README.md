@@ -1,2 +1,11 @@
 # SEN201_BirdCam
-By Phurich Amornnara
+Software Engineering Process Project (Pseudocode to Flowchart)
+
+By 
+Phurich Amornnara 
+
+Thanakit Thanasuwanditee
+
+Phasin Noomkan
+
+Puttipong Srisuwantat
