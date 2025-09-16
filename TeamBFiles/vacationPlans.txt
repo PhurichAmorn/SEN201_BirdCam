@@ -1,0 +1,26 @@
+Vacation Plans:
+
+1. Destination: Hawaii
+    - Activities: Surfing, snorkeling, hiking, and relaxing on the beach.
+    - Duration: 7 days
+    - Accommodation: Beachfront resort
+
+2. Destination: Japan
+    - Activities: Explore Tokyo, visit Kyoto temples, and enjoy cherry blossoms.
+    - Duration: 10 days
+    - Accommodation: Traditional ryokan and city hotels
+
+3. Destination: Italy
+    - Activities: Tour Rome, Venice, and Florence; enjoy Italian cuisine.
+    - Duration: 12 days
+    - Accommodation: Boutique hotels and countryside villas
+
+4. Destination: Iceland
+    - Activities: Northern lights, hot springs, and glacier hiking.
+    - Duration: 5 days
+    - Accommodation: Cozy cabins
+
+5. Destination: Australia
+    - Activities: Great Barrier Reef, Sydney Opera House, and wildlife tours.
+    - Duration: 14 days
+    - Accommodation: City hotels and beach lodges
