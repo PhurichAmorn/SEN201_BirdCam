@@ -1,0 +1,148 @@
+Pseudocode Standard
+=====================================
+
+This document outlines the pseudocode conventions and standards used in Birdcam PseudocodeTo Flowchart course.
+
+LOGICAL OPERATIONS
+==================
+
+1. IF Statement
+    - Tests the value of a logical condition
+    - Introduces a set of actions that will occur if the test is true
+    
+    Syntax:
+    if [condition]
+        [actions if true]
+    endif
+    
+    Example:
+    if x is bigger than y
+        print "x is bigger than y"
+    endif
+
+2. ELSE Statement
+    - Must be paired with if
+    - Introduces a set of actions that will occur if the test is false
+    
+    Syntax:
+    if [condition]
+        [actions if true]
+    else
+        [actions if false]
+    endif
+    
+    Example:
+    if x is larger than y
+        print "x is bigger than y"
+    else
+        print "x is smaller than y"
+    endif
+
+3. ENDIF Statement
+   - Indicates the close of a group of actions controlled by if or otherwise
+
+ITERATION (LOOPING)
+===================
+
+1.  FOR Loop
+    - Repeats a set of actions for all members of some set
+    - Must be closed with endfor
+    
+        Syntax:
+        for [item] in [collection]
+            [actions to repeat]
+        endfor
+    
+    Example:
+    for fruit in basket
+        print fruit
+        print fruit's color
+    endfor
+
+2.  WHILE Loop
+    - Repeats a set of actions as long as a logical condition remains true
+    - Must be closed with endwhile
+   
+    Syntax:
+    repeatwhile [condition] is true
+        [actions to repeat]
+    endwhile
+    
+    Example:
+    set continue = true
+    while continue is true
+        do Calculate size(fruit)
+        print size
+        print "Want to continue?"
+        get response
+        if response is No
+            set continue = false
+        endif
+    endwhile
+
+FORMATTING RULES
+================
+
+1. INDENTING
+    - Indent all actions controlled by a logical or looping construction 
+        the same number of spaces or tabs
+    - For nested (included) logical or looping constructions, indent again 
+        to show the structure
+   
+    Example:
+    set total = 0
+    for x in range 0 to 10
+        if x/2 equals 0
+            set total = total + x
+        endif
+    endfor
+
+2. MATH AND LOGICAL SYMBOLS
+    - You may use either words ("is larger than") or symbols (>)
+    - Do NOT use the symbol = for "equals"
+    - The = symbol should be used ONLY to set values
+   
+   Correct:
+   - if x equals y
+   - if x > y
+   - set total = 0
+   
+   Incorrect:
+   - if x = y (for comparison)
+
+COMPLETE EXAMPLE
+================
+
+set total = 0
+for x in range 0 to 10
+    if x/2 equals 0
+        set total = total + x
+    endif
+endfor
+print "Total of even numbers from 0 to 10: " + total
+
+SUMMARY OF KEYWORDS
+===================
+
+Control Structures:
+- if / endif
+- else
+- for / endfor
+- while / endwhile
+
+Operations:
+- set (for assignment)
+- print (for output)
+- get (for input)
+- do (for function calls)
+
+Comparison Operators (words):
+- equals
+
+Comparison Operators (symbols):
+- > (greater than)
+- < (less than)
+- >= (greater than or equal to)
+- <= (less than or equal to)
+
+Note: Always use proper indentation to show program structure and nesting levels.
