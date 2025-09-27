@@ -80,6 +80,60 @@ ITERATION (LOOPING)
         endif
     endwhile
 
+
+GENERIC OPERATIONS
+==================
+
+1. SET Statement
+   - Used for variable assignment and value storage
+   - Assigns a value to a variable using the = symbol
+   
+   Syntax:
+   set [variable] = [value]
+   
+   Examples:
+   set total = 0
+   set name = "John"
+   set result = x + y
+
+2. PRINT Statement
+   - Used for displaying output to the user
+   - Shows messages, variables, or calculated values
+   
+   Syntax:
+   print [message or variable]
+   
+   Examples:
+   print "Hello World"
+   print total
+   print "The result is: {result}"
+
+3. GET Statement
+   - Used for receiving input from the user
+   - Stores user input into a variable
+   
+   Syntax:
+   get [variable]
+   
+   Examples:
+   get username
+   get age
+   get response
+
+4. DO Statement
+   - Used for calling functions or procedures
+   - Executes a named operation or calculation
+   
+   Syntax:
+   do [function_name]
+   do [function_name(parameters)]
+   
+   Examples:
+   do Calculate_Average
+   do Print_Report(data)
+   do Validate_Input(username)
+
+
 FORMATTING RULES
 ================
 
@@ -119,7 +173,7 @@ for x in range 0 to 10
         set total = total + x
     endif
 endfor
-print "Total of even numbers from 0 to 10: " + total
+print "Total of even numbers from 0 to 10: {total}" 
 
 SUMMARY OF KEYWORDS
 ===================
