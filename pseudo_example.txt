@@ -6,7 +6,7 @@ for item in item_set
     if item_price >= 100
         Set vat = item_price * 0.07
     endif
-    print item_name, item_price, vat, (item_price + vat)
+    print "Name: {item_name} Price: {item_price} VAT: {vat} Price+VAT: {item_price + vat}"
     set total_items = total_items + item_price
     set total_vat = total_vat + vat
     set grand_total = grand_total + item_price + vat
