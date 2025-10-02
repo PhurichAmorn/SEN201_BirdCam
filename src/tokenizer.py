@@ -11,7 +11,9 @@ Date: 27/09/2025
 from typing import List, NamedTuple
 from enum import Enum
 
+
 class Type(Enum):
+    """Enumeration of token types"""
     IF = 1
     ELSE = 2
     ENDIF = 3
@@ -24,12 +26,12 @@ class Type(Enum):
     PRINT = 10
     GET = 11
     DO = 12
-    STATEMENT = 13 
+    STATEMENT = 13
 
 
 class Token(NamedTuple):
     """Represents a single token in pseudocode"""
-    type: Type          # Type of token (e.g., 'IF', 'SET', 'FOR', etc.)
+    type: Type         # Type of token (e.g., 'IF', 'SET', 'FOR', etc.)
     value: str         # The actual text content
     line_number: int   # Line number in source
     indent_level: int  # Indentation level (0, 1, 2, ...)
@@ -38,7 +40,7 @@ class Token(NamedTuple):
 class PseudocodeTokenizer:
     """
     Tokenizes pseudocode according to the standard.
-    
+
     """
 
     # Keywords defined in BIRDCAM standard
@@ -86,7 +88,7 @@ class PseudocodeTokenizer:
             if not line.strip():  # Skip empty lines
                 continue
 
-            indent_level = self._calculate_indent_level(line) 
+            indent_level = self._calculate_indent_level(line)
             clean_line = line.strip()
             token_type = self._identify_token_type(clean_line)
 
@@ -171,9 +173,31 @@ for x in range 0 to 10
         set total = total + x
     endif
 endfor
-print "Total of even numbers from 0 to 10: {total} 
+print "Total of even numbers from 0 to 10: {total}" 
     """
 
     tokenizer = PseudocodeTokenizer()
     tokens = tokenizer.tokenize_text(sample_code)
     tokenizer.print_tokens(tokens)
+
+
+# Output:
+"""
+--------------------------------------------------
+ 1. [Type.SET  ] set total = 0
+     Line: 1, Indent: 0
+ 2. [Type.FOR  ] for x in range 0 to 10
+     Line: 2, Indent: 0
+ 3.   [Type.IF   ] if x%2 equals 0
+     Line: 3, Indent: 1
+ 4.     [Type.SET  ] set total = total + x
+     Line: 4, Indent: 2
+ 5.   [Type.ENDIF] endif
+     Line: 5, Indent: 1
+ 6. [Type.ENDFOR] endfor
+     Line: 6, Indent: 0
+ 7. [Type.PRINT] print "Total of even numbers from 0 to 10: {total}"
+     Line: 7, Indent: 0
+--------------------------------------------------
+
+"""
