@@ -33,12 +33,7 @@ python -m pip install -r requirements.txt
 
 ### Development dependencies
 
-Development and test tools should be kept separate from runtime dependencies. Add a `dev-requirements.txt` at the repository root to list packages used only during development. Example `dev-requirements.txt`:
-
-```text
-# Development and test dependencies (not required at runtime)
-pytest>=8.0,<9.0         # test runner
-```
+Development and test tools should be kept separate from runtime dependencies. Install requirements from `dev-requirements.txt` to get packages used only during development. 
 
 Install development dependencies with:
 
