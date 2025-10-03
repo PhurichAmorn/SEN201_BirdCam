@@ -20,3 +20,45 @@ This project focuses on converting pseudocode to flowcharts as part of the Softw
 ## Files
 
 - `BIRDCAM_pseudocode_standard.txt` - Comprehensive pseudocode standard documentation
+
+## Requirements
+
+This project includes a **[BIRDCAM_REQUIREMENT](requirements.txt)** file at the repository root which lists the Python packages needed to run and test the project.
+
+To install the required packages into your active Python environment, run:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+### Development dependencies
+
+Development and test tools should be kept separate from runtime dependencies. Add a `dev-requirements.txt` at the repository root to list packages used only during development. Example `dev-requirements.txt`:
+
+```text
+# Development and test dependencies (not required at runtime)
+pytest>=8.0,<9.0         # test runner
+```
+
+Install development dependencies with:
+
+```bash
+python -m pip install -r dev-requirements.txt
+```
+
+Common dev commands:
+
+```bash
+# Run tests
+pytest -q
+```
+
+Keep `requirements.txt` for packages required by the application at runtime and `dev-requirements.txt` for tools used during development.
+
+## Running tests
+
+Unit tests are in the `tests/` folder. To run them, execute:
+
+```bash
+pytest -q
+```

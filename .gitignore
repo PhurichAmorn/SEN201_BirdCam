@@ -1,6 +1,5 @@
 test.txt
 test
 unused
-requirements.txt
 .pytest_cache
 *.py[cod]
