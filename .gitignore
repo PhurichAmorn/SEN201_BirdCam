@@ -1,6 +1,5 @@
 test.txt
 test
 unused
-requirements.txt
-tests
-src/__pycache__
+.pytest_cache
+*.py[cod]
