@@ -20,13 +20,12 @@ class Type(Enum):
     FOR = 4
     ENDFOR = 5
     WHILE = 6
-    REPEATWHILE = 7
-    ENDWHILE = 8
-    SET = 9
-    PRINT = 10
-    GET = 11
-    DO = 12
-    STATEMENT = 13
+    ENDWHILE = 7
+    SET = 8
+    PRINT = 9
+    GET = 10
+    DO = 11
+    STATEMENT = 12
 
 
 class Token(NamedTuple):
@@ -128,7 +127,6 @@ class PseudocodeTokenizer:
             "for": Type.FOR,
             "endfor": Type.ENDFOR,
             "while": Type.WHILE,
-            "repeatwhile": Type.REPEATWHILE,
             "endwhile": Type.ENDWHILE,
             "set": Type.SET,
             "print": Type.PRINT,
