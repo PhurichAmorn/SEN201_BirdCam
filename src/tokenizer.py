@@ -65,12 +65,11 @@ class PseudocodeTokenizer:
         RETURNS:
             List of Token objects
         """
-        try:
-            loader = FileLoader()
-            code = loader.load_file(filename)
-            return self.tokenize_text(code)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Pseudocode file '{filename}' not found")
+
+        loader = FileLoader()
+        code = loader.load_file(filename)
+        return self.tokenize_text(code)
+    
 
     def tokenize_text(self, text: str) -> List[Token]:
         """
