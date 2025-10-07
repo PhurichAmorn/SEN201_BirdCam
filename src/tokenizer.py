@@ -10,7 +10,7 @@ Date: 27/09/2025
 
 from typing import List, NamedTuple
 from enum import Enum
-
+from upload import FileLoader
 
 class Type(Enum):
     """Enumeration of token types"""
@@ -66,9 +66,9 @@ class PseudocodeTokenizer:
             List of Token objects
         """
         try:
-            with open(filename, 'r') as file:
-                content = file.read()
-            return self.tokenize_text(content)
+            loader = FileLoader()
+            code = loader.load_file(filename)
+            return self.tokenize_text(code)
         except FileNotFoundError:
             raise FileNotFoundError(f"Pseudocode file '{filename}' not found")
 
