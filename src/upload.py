@@ -4,8 +4,7 @@ upload.py
 This module help import the pseudocode file into a string
 
 Author: Phurich Amornnara (Phu)
-Date: 3 October 2025
-
+Date: 03/10/2025
 '''
 
 import os
