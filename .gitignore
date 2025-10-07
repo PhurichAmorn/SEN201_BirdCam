@@ -4,3 +4,4 @@ unused
 .pytest_cache
 *.py[cod]
 .DS_Store
+__pycache__
