@@ -1,0 +1,7 @@
+************* Module tokenizer
+src/tokenizer.py:165:4: C0103: Constant name "sample_code" doesn't conform to UPPER_CASE naming style (invalid-name)
+src/tokenizer.py:181:0: W0105: String statement has no effect (pointless-string-statement)
+
+------------------------------------------------------------------
+Your code has been rated at 9.70/10 (previous run: 9.24/10, +0.45)
+
