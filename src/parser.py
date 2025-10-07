@@ -8,7 +8,7 @@ Author: Phasin Noomkan(Nine)
 Date: 28/09/2025
 """
 
-from typing import List, Optional, Union
+from typing import List, Optional
 from abc import ABC, abstractmethod
 from tokenizer import Token, Type, PseudocodeTokenizer
 

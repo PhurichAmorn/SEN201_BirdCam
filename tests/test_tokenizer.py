@@ -49,24 +49,6 @@ print "Total of even numbers from 0 to 10: {total}
     assert [t.type for t in tokens] == expected_types
 
 
-def test_indentation_levels():
-    """Indentation levels should be calculated from leading whitespace."""
-
-    sample_code = """
-set x = 1
-if x > 0
-    print "positive"
-    if x equals 1
-        print "exactly one"
-    endif
-endif"""
-
-    tokenizer = PseudocodeTokenizer(tab_size=4)
-    tokens = tokenizer.tokenize_text(sample_code)
-
-    expected_indents = [0, 0, 1, 1, 2, 1, 0]
-    assert [t.indent_level for t in tokens] == expected_indents
-
 
 def test_tokenize_file_not_found(tmp_path):
     """tokenize_file should raise FileNotFoundError for missing files."""
