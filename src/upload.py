@@ -10,6 +10,9 @@ Date: 03/10/2025
 import os
 
 class FileLoader:
+    """
+    Load the file that user want to convert to flowchart
+    """
     def __init__(self):
         self.filepath = None # store the filepath
         self.content = "" # store the pseudocode
@@ -21,23 +24,25 @@ class FileLoader:
     Return:
         string of the pseudocode
     """
-    def load_file(self, filepath: str) -> str:
-        
-        if not os.path.exists(filepath): # if file cannot be find
-            raise FileNotFoundError(f"File not found: {filepath}")
+    def load_file(self, path: str) -> str:
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"File not found: {path}")
 
-        self.filepath = filepath # save the filepath
-        with open(filepath, "r") as f:
+        if not path.lower().endswith(".psc"):
+            raise ValueError(f"Invalid file type: {path}. Only '.psc' files are allowed.")
+
+        self.filepath = path  # save the filepath
+        with open(path, "r", encoding="utf-8") as f:
             self.content = f.read()
 
         return self.content
 
 if __name__ == "__main__":
     # Test the file loader
-    filepath = "../pseudo_example.psc"
+    example_filepath = "../pseudo_example.psc"
 
     loader = FileLoader()
-    code = loader.load_file(filepath)
+    code = loader.load_file(example_filepath)
 
     print(code)
 
