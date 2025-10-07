@@ -10,6 +10,7 @@ Date: 1 Oct 2025
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
 import os
+from upload import FileLoader
 try:
     from PIL import Image, ImageTk, ImageDraw
     import cairosvg
@@ -84,7 +85,7 @@ class FlowchartTab:
         if SVG_SUPPORT:
             try:
                 # Read SVG content and modify colors
-                with open("Upload.svg", "r") as svg_file:
+                with open("assets/Upload.svg", "r") as svg_file:
                     svg_content = svg_file.read()
                 
                 # Convert SVG to PNG in memory
@@ -336,9 +337,8 @@ class FlowchartTab:
         
         if file_path:
             try:
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    content = file.read()  # file content to display in editor
-                
+                loader = FileLoader()
+                content = loader.load_file(file_path)
                 self.file_path = file_path
                 self.is_file_loaded = True
                 
@@ -350,17 +350,14 @@ class FlowchartTab:
                 self.text_editor.delete(1.0, tk.END)
                 self.text_editor.insert(1.0, content)
                 
-                # Update line numbers
-                self._update_line_numbers()
-                
-                # Switch to editor view
-                self._show_editor_screen()
+                self._update_line_numbers()  # Update line numbers
+                self._show_editor_screen()  # Switch to editor view
                 
                 # Update parent tab name
                 if hasattr(self, 'parent_app'):
                     self.parent_app.update_tab_name(self, self.tab_name)
                     self.parent_app._update_all_tab_display()
-                    
+
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load file: {str(e)}")
     
