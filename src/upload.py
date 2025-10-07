@@ -15,9 +15,9 @@ class FileLoader:
         self.content = "" # store the pseudocode
 
     """
-    read a pseudocode .txt file
+    read a pseudocode .psc file
     Arg:
-        filepath - path of the pseudocode file
+        filepath - path of the pseudocode file (.psc)
     Return:
         string of the pseudocode
     """
@@ -34,7 +34,7 @@ class FileLoader:
 
 if __name__ == "__main__":
     # Test the file loader
-    filepath = "../pseudo_example.txt"
+    filepath = "../pseudo_example.psc"
 
     loader = FileLoader()
     code = loader.load_file(filepath)
