@@ -69,6 +69,7 @@ class PseudocodeTokenizer:
         loader = FileLoader()
         code = loader.load_file(filename)
         return self.tokenize_text(code)
+    
 
     def tokenize_text(self, text: str) -> List[Token]:
         """
@@ -173,8 +174,8 @@ print "Total of even numbers from 0 to 10: {total}"
     """
 
     tokenizer = PseudocodeTokenizer()
-    sample_tokens = tokenizer.tokenize_text(sample_code)
-    tokenizer.print_tokens(sample_tokens)
+    tokens = tokenizer.tokenize_text(sample_code)
+    tokenizer.print_tokens(tokens)
 
 
 # Output:
