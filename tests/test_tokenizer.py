@@ -53,10 +53,22 @@ print "Total of even numbers from 0 to 10: {total}
 def test_tokenize_file_not_found(tmp_path):
     """tokenize_file should raise FileNotFoundError for missing files."""
     tokenizer = PseudocodeTokenizer()
-    missing = tmp_path / "no_such_file.pseudo"
+    missing = tmp_path / "no_such_file.psc"
 
     with pytest.raises(FileNotFoundError):
         tokenizer.tokenize_file(str(missing))
+
+
+def test_tokenize_file_invalid_extension(tmp_path):
+    """tokenize_file should raise ValueError for non-.psc files."""
+    tokenizer = PseudocodeTokenizer()
+    
+    # Create a file with wrong extension
+    invalid_file = tmp_path / "test_file.txt"
+    invalid_file.write_text("set x = 1")
+
+    with pytest.raises(ValueError, match="Invalid file type.*Only '.psc' files are allowed"):
+        tokenizer.tokenize_file(str(invalid_file))
 
 
 def test_other_token_types():
@@ -87,7 +99,7 @@ def test_tokenize_file_reads_attachment():
     """Read pseudocode from the provided test.txt file and tokenize it."""
     
 
-    file_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'test.txt'))
+    file_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'test.psc'))
 
     tokenizer = PseudocodeTokenizer()
     tokens = tokenizer.tokenize_file(file_path)
