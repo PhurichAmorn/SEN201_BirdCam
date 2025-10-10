@@ -1,0 +1,29 @@
+************* Module parser
+src/parser.py:13:54: C0303: Trailing whitespace (trailing-whitespace)
+src/parser.py:103:0: C0301: Line too long (110/100) (line-too-long)
+src/parser.py:282:45: C0303: Trailing whitespace (trailing-whitespace)
+src/parser.py:449:0: C0304: Final newline missing (missing-final-newline)
+src/parser.py:16:0: W0105: String statement has no effect (pointless-string-statement)
+src/parser.py:35:4: W0107: Unnecessary pass statement (unnecessary-pass)
+src/parser.py:33:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:38:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:45:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:52:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:59:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:68:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:76:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:84:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:92:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:100:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:110:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:120:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:148:20: W0621: Redefining name 'tokens' from outer scope (line 424) (redefined-outer-name)
+src/parser.py:183:8: R1705: Unnecessary "elif" after "return", remove the leading "el" from "elif" (no-else-return)
+src/parser.py:169:4: R0911: Too many return statements (10/6) (too-many-return-statements)
+src/parser.py:357:4: R0912: Too many branches (15/12) (too-many-branches)
+src/parser.py:412:4: C0103: Constant name "sample_code" doesn't conform to UPPER_CASE naming style (invalid-name)
+src/parser.py:437:0: W0105: String statement has no effect (pointless-string-statement)
+
+-----------------------------------
+Your code has been rated at 8.98/10
+
