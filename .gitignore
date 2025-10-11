@@ -3,3 +3,4 @@ test
 unused
 .pytest_cache
 *.py[cod]
+upload_doc.md
