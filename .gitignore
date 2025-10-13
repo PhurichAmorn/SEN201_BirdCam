@@ -1,7 +1,11 @@
-test.txt
+test.psc
 test
 unused
 .pytest_cache
 *.py[cod]
 .DS_Store
 __pycache__
+flowchart_generator.py
+export_flowchart.py
+flowchart_general.png
+test_upload.py

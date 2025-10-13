@@ -10,8 +10,7 @@ Date: 28/09/2025
 
 from typing import List, Optional
 from abc import ABC
-from tokenizer import Token, Type, PseudocodeTokenizer
-
+from tokenizer import Token, Type, PseudocodeTokenizer 
 
 """
 ASTNode Structure:
@@ -182,19 +181,19 @@ class PseudocodeParser:
 
         if token.type == Type.SET:
             return self._parse_set_statement()
-        elif token.type == Type.PRINT:
+        if token.type == Type.PRINT:
             return self._parse_print_statement()
-        elif token.type == Type.GET:
+        if token.type == Type.GET:
             return self._parse_get_statement()
-        elif token.type == Type.DO:
+        if token.type == Type.DO:
             return self._parse_do_statement()
-        elif token.type == Type.IF:
+        if token.type == Type.IF:
             return self._parse_if_statement()
-        elif token.type == Type.FOR:
+        if token.type == Type.FOR:
             return self._parse_for_statement()
-        elif token.type == Type.WHILE:
+        if token.type == Type.WHILE:
             return self._parse_while_statement()
-        elif token.type in [Type.ELSE, Type.ENDIF, Type.ENDFOR, Type.ENDWHILE]:
+        if token.type in [Type.ELSE, Type.ENDIF, Type.ENDFOR, Type.ENDWHILE]:
             # These are handled by their parent constructs
             return None
         else:
@@ -421,11 +420,11 @@ print "Total of even numbers from 0 to 10: {total}"
 
     # Tokenize first
     tokenizer = PseudocodeTokenizer()
-    tokens = tokenizer.tokenize_text(sample_code)
+    example_tokens = tokenizer.tokenize_text(sample_code)
 
     # Parse tokens into AST
     parser = PseudocodeParser()
-    ast = parser.parse(tokens)
+    ast = parser.parse(example_tokens)
 
     # Print the AST
     print("Abstract Syntax Tree:")

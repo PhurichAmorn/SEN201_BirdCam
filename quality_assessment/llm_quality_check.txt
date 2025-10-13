@@ -1,0 +1,103 @@
+Static analysis report — src/
+Generated: 2025-10-07
+
+Summary
+-------
+This report contains a focused static analysis of the Python modules in `src/`: `tokenizer.py`, `parser.py`, and `upload.py`.
+I inspected the code for correctness, potential runtime errors, API design, testability, and style issues. No syntax errors were detected by the project checker.
+
+High-level status
+- Files analyzed: src/tokenizer.py, src/parser.py, src/upload.py
+- Syntax errors reported by the analysis tool: None
+- Immediate runtime risks (possible exceptions or incorrect behavior): Several (see file-specific findings)
+
+File-by-file findings
+---------------------
+1) src/tokenizer.py
+	- Purpose: Tokenize pseudocode into Token objects with type, value, line_number, indent_level.
+	- Observations & issues:
+		* Import style: uses `from upload import FileLoader`. This works when `src` is on PYTHONPATH (tests insert it), but for packaging or running as a module it's preferable to use a relative import (`from .upload import FileLoader`).
+		* `tokenize_text` calls `text.strip().split('\n')`. Using `strip()` removes leading/trailing blank lines which changes reported `line_number` relative to original source. Consider using `splitlines()` (preserves empty lines when combined with logic) or avoid `strip()` so reported line numbers match the original file.
+		* `_identify_token_type` uses `.startswith(keyword + ' ') or == keyword`. This will correctly match common cases but will miss cases like `if(x>0)` or `if(x > 0)` (no space). Consider a more robust tokenizer: tokenizing by first token (split by whitespace) or using regex.
+		* `print_tokens` formatting: the f-string uses `{token.type:10s}` where `token.type` is an Enum. Applying the `s` format code to an Enum may raise a TypeError on some Python versions because the Enum doesn't accept string format codes directly. Use `str(token.type)` or `token.type.name` for predictable output.
+		* `CONTROL_KEYWORDS` contains `'repeatwhile'` but there is no corresponding Enum entry. This is harmless here but confusing; keep control words consistent with the `Type` enum.
+
+	- Recommendations:
+		* Use `from .upload import FileLoader` if the package is used as a module.
+		* Avoid `strip()` to preserve original line offsets, or compute absolute line numbers when tokenizing files.
+		* For token matching, split the line by whitespace and inspect the first token or use a small regex.
+		* Change `print_tokens` to show `token.type.name` (or `token.type.value`), e.g. `f"[{token.type.name:10s}]"`.
+
+2) src/parser.py
+	- Purpose: Parse token stream into an AST (Program, Block, and various Statement nodes).
+	- Observations & issues:
+		* The parser relies on token types produced by the tokenizer. The overall structure is reasonable and mostly defensive.
+		* `_peek` returns `self.tokens[-1]` when `_is_at_end()` is True. This is surprising: callers expect a sentinel or to check `_is_at_end()` before peeking. Returning the last token could mask logic bugs and lead to subtle infinite loops or out-of-range errors if code later advances incorrectly.
+		* `_advance` increments `self.current` only when not at end and then returns `self.tokens[self.current - 1]`. If called when `self.current == 0` and `self.tokens` is empty, this would raise an IndexError. The code mostly guards with `_is_at_end()` checks but it's brittle.
+		* Error messages are helpful (ParseError) but a few parse branches raise generic messages; consider including offending token/value to aid debugging.
+		* `print_ast` implementation uses isinstance checks and prints; it's fine for debugging but could be replaced with a `__repr__` or visitor pattern to make testing easier.
+
+	- Recommendations:
+		* Change `_peek` to raise an IndexError or return `None`/sentinel when at end; ensure callers check `_is_at_end()` before peek.
+		* Harden `_advance` with an explicit check and clearer error message when advancing past end.
+		* Add unit tests for parser error paths (missing ENDIF/ENDFOR/ENDWHILE) and nested control structures.
+
+3) src/upload.py
+	- Purpose: Read a pseudocode text file into a string.
+	- Observations & issues:
+		* `load_file` checks `os.path.exists(filepath)` then opens the file without an explicit encoding; recommend `encoding='utf-8'` for deterministic behavior across systems.
+		* `load_file` will raise `FileNotFoundError` when not found, which is fine.
+		* Minor: store `self.filepath` but this instance is short-lived in the tokenizer; consider making `load_file` a `@staticmethod` or a simple module-level function unless object state is needed.
+
+	- Recommendations:
+		* Open files with `with open(filepath, 'r', encoding='utf-8') as f:`.
+		* Optionally validate `filepath` is a file (not a directory): `os.path.isfile(filepath)`.
+
+Contract (concise)
+- Inputs: pseudocode text (str) or filepath (str).
+- Outputs: `tokenize_text` -> List[Token]; `PseudocodeParser.parse` -> Program AST node.
+- Error modes: FileNotFoundError, ParseError, potential IndexError if parser misused.
+
+Edge cases to cover in tests
+- Empty file and files with only whitespace.
+- Files with inconsistent indentation (mix of spaces and tabs) and very large indent levels.
+- Malformed control flow (missing ENDIF/ENDFOR/ENDWHILE; unexpected ELSE).
+- Lines that use parentheses or punctuation adjacent to keywords (e.g., `if(x>0)`).
+- Very long lines, unicode characters, and non-UTF-8 encoded files.
+
+Tests & quality gates
+- Lint / Syntax: quick check showed no syntax errors.
+- Unit tests: repository contains `tests/test_tokenizer.py`. I could not run pytest within the analysis tool reliably (the `runTests` helper reported "No tests found in the files" when given absolute paths). To run locally, use:
+
+```bash
+# from repository root
+pytest -q
+```
+
+- Suggested tests to add:
+	* Parser error-path tests for missing terminators.
+	* Tokenizer tests for first-token matching (cases with no space after keyword).
+	* Round-trip test: tokenize -> parse -> pretty-print -> compare to expected AST shape.
+
+Low-risk improvements (next steps I recommend)
+- Fix `print_tokens` formatting to use `token.type.name`.
+- Use explicit file encoding in `upload.load_file`.
+- Replace `from upload import FileLoader` with `from .upload import FileLoader` if this package will be imported as a module.
+- Harden parser `_peek` and `_advance` to avoid returning the last token silently.
+
+Requirements coverage
+- "Static analysis of `src` folder" — Done
+
+Appendix: quick examples of minor code fixes (illustrative)
+- Replace formatting in `tokenizer.print_tokens`:
+
+		indent = "  " * token.indent_level
+		print(f"{i+1:2d}. {indent}[{token.type.name:10s}] {token.value}")
+
+- Open file with encoding in `upload.load_file`:
+
+		with open(filepath, "r", encoding="utf-8") as f:
+				self.content = f.read()
+
+End of report.
+

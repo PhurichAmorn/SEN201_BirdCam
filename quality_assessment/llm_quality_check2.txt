@@ -1,0 +1,144 @@
+
+Static analysis report — src/ (tokenizer.py, parser.py, upload.py)
+Date: 2025-10-07
+Analyst: automated static check (pair-programmer style)
+
+Summary
+-------
+This report inspects the three modules in `src/`: `tokenizer.py`, `parser.py`, and `upload.py`.
+Overall the code is clear, well-documented, and organized into small classes with single responsibilities.
+I found a mix of correctness issues, robustness/usability shortcomings, and opportunities for small refactors and tests.
+
+Severity Legend
+- High: defects that can cause crashes, incorrect parsing, or incorrect results.
+- Medium: bugs or missing checks that reduce robustness or correctness in edge cases.
+- Low: style, maintainability, or usability improvements.
+
+High-severity issues
+-------------------
+1) tokenizer.py: incorrect import / circular import risk
+	- Problem: `tokenizer.py` does `from upload import FileLoader` using a relative filename import without package context. If `src` is used as a package or run from other working directories, this may fail. It also risks circular imports if `upload.py` ever imports tokenizer (currently it does not, but it's brittle).
+	- Impact: File loading via `tokenize_file` may fail with ImportError when the package is imported differently.
+	- Fix: use a relative import if `src` is a package (e.g., `from .upload import FileLoader`) or prefer to inject a FileLoader instance (dependency injection) into the tokenizer. Also add a fallback/explicit error message.
+
+2) parser.py: _peek returns last token when at end (bug)
+	- Problem: `_peek` returns `self.tokens[-1]` when `_is_at_end()` is True. If tokens is empty (no tokens), this raises IndexError; if current is at end and caller expects a sentinel token, returning the last token can hide bounds errors and cause incorrect parsing.
+	- Impact: parsing empty inputs or certain end-of-file conditions can crash or produce wrong AST.
+	- Fix: change `_peek` to raise a clear error or return a special sentinel token; at minimum return None or raise ParseError when peeking past end. Update callers accordingly.
+
+3) parser.py: _advance increments before returning last token (off-by-one risk)
+	- Problem: `_advance` increments `self.current` and then returns `self.tokens[self.current - 1]`. This is acceptable, but combined with `_is_at_end` behavior and `_peek` above there are subtle edge cases. Also `_advance` does not guard against advancing beyond the list bounds if called when at end.
+	- Impact: may raise IndexError when tokens are exhausted.
+	- Fix: guard `_advance` with an explicit check and raise a ParseError on out-of-bounds use.
+
+Medium-severity issues
+---------------------
+4) tokenizer.py: tokenize_text uses text.strip().split('\n') — loses leading/trailing blank lines
+	- Problem: calling `strip()` removes leading and trailing blank lines and whitespace which affects reported line numbers vs original file. The tokenizer then uses enumerate starting at 1, but because stripped lines removed lines, reported line_number won't match original file.
+	- Impact: reported `line_number` in tokens will not match the original file when the file has leading/trailing blank lines.
+	- Fix: use `splitlines()` without `strip()` and keep original line offsets. Example: `lines = text.splitlines()`.
+
+5) tokenizer.py: Token.print formatting uses f"{token.type:10s}" — wrong formatting for Enum
+	- Problem: `token.type` is an Enum value; formatting with `:10s` expects a string and will raise a TypeError. This might not show up in tests if `print_tokens` is rarely used.
+	- Impact: debugging output can crash.
+	- Fix: use `token.type.name` or `str(token.type)`.
+
+6) parser.py: parse loop and statement skipping of ELSE/ENDIF/ENDFOR/ENDWHILE
+	- Problem: `_parse_statement` returns None for tokens whose type is an end/control keyword (ELSE, ENDIF, ENDFOR, ENDWHILE). The top-level loop in `parse` appends stmt only when not None, which means stray end tokens are silently consumed by parent parsers, but there's no explicit consumption here; if these tokens are reachable at top-level they will lead to infinite loops because `_parse_statement` may return None without advancing the token pointer.
+	- Impact: malformed token streams or misplaced control tokens can cause infinite loops or silent skipping.
+	- Fix: when encountering an unmatched control keyword at top-level, raise a ParseError. Ensure that when `_parse_statement` returns None it has advanced the token index or that the caller handles skipping appropriately.
+
+7) parser.py: inconsistent use of .replace('if','').strip() — brittle matching
+	- Problem: parser strips keywords by replacing substrings: e.g., `if_token.value.replace('if','').strip()`. This will remove all occurrences of 'if' in the line (e.g., 'gift' becomes 'gt'), or remove in uppercase variants.
+	- Impact: conditions/values containing the keyword string can be mangled.
+	- Fix: safer parsing: split once on the first whitespace after the keyword or use `token.value[len('if'):].strip()` (and preserve original case as needed). Use `.lower().startswith('if ')` when identifying, but keep original for values.
+
+8) upload.py: insecure open/read without encoding or context manager mode checks
+	- Problem: `open(filepath, "r")` without specifying encoding may lead to decoding errors on files with non-UTF8 content. Also there's no error handling for unreadable files.
+	- Impact: crash on non-default-encoding files.
+	- Fix: open with explicit encoding (e.g., `encoding='utf-8'`) and consider exposing an argument to control encoding.
+
+Low-severity issues and suggestions
+---------------------------------
+9) General: missing unit tests for parser error cases
+	- Suggest adding tests for empty input, unmatched END tokens, nested blocks, unusual spacing, and lines containing keywords inside words.
+
+10) tokenizer.py: CONTROL_KEYWORDS includes 'repeatwhile' but Type uses ENDWHILE label 'ENDWHILE' — naming mismatch
+	- Suggestion: standardize names and document mapping.
+
+11) parser.py: many classes re-implement simple containers without type annotations on attributes
+	- Suggestion: add dataclass or __repr__ for easier debugging and better typing (e.g., use @dataclass from dataclasses).
+
+12) print/debug helpers: add __str__/__repr__ for Token and AST nodes to make debugging outputs consistent.
+
+13) CLI / entrypoints: modules include `if __name__ == '__main__'` test code that uses relative paths — fine for local tests but brittle for packaging. Consider moving those to tests or example scripts.
+
+Concrete fixes (patch suggestions)
+--------------------------------
+- tokenizer.py
+  - Replace `from upload import FileLoader` with `from .upload import FileLoader` (if `src` is a package) or accept a FileLoader parameter in `__init__`.
+  - Change `lines = text.strip().split('\n')` to `lines = text.splitlines()` to preserve line numbers.
+  - In `print_tokens` format `token.type.name` not `token.type` with `:10s`.
+
+- parser.py
+  - Change `_peek` to:
+		- if self._is_at_end(): raise ParseError('Unexpected end of input') or return None.
+		- Update callers accordingly (check for None).
+  - Make `_advance` safe by guarding against advancing when at end and raising ParseError.
+  - When stripping keyword prefix use `content = token.value[len(keyword):].strip()` rather than `replace`.
+  - Ensure top-level parse loop advances token pointer or raises on unexpected end/control tokens to avoid infinite loops.
+
+- upload.py
+  - Use `with open(filepath, 'r', encoding='utf-8') as f:` and document encoding.
+
+Recommended tests to add
+------------------------
+1) tokenizer tests
+	- Input with leading/trailing blank lines: ensure line_number matches file.
+	- Lines with keywords embedded in words (e.g., "gift") — confirm token type is STATEMENT.
+	- Mixed tabs and spaces: calculate indent level consistently (add tests for tab_size behavior).
+
+2) parser tests
+	- Empty token list -> ParseError or Program with zero statements (decide desired behavior and test it).
+	- Unmatched END tokens (e.g., ENDFOR without FOR) -> ParseError.
+	- Nested constructs (if inside for, while inside if) -> AST shape verification.
+	- Keyword-in-value edge case (e.g., variable names containing 'if') -> ensure values preserved.
+
+3) integration
+	- Round-trip test: tokenize a real pseudocode file (from `pseudo_example.txt`), parse, then pretty-print AST and assert expected structure.
+
+Quality gates / quick checks I ran mentally against the code
+---------------------------------------------------------
+- Syntax: the provided files parse as valid Python (no syntax errors in static read).
+- Lint: there are style inconsistencies (capitalization in docstrings, mixed single/double quotes) but nothing blocking.
+- Tests: repository includes `tests/test_tokenizer.py` — extend it to cover the points above.
+
+Next steps (recommended)
+------------------------
+1) Apply the concrete fixes listed (start with tokenizer `splitlines` + print fix, upload encoding change, and parser `_peek/_advance` guards).
+2) Add unit tests for the tokenizer and parser edge cases and run tests.
+3) Consider turning AST node classes into dataclasses for clarity and immutability (optional but helpful).
+
+Requirements coverage
+---------------------
+- Static analysis of `src/` (Done)
+- Identified high/medium/low severity issues with suggested fixes (Done)
+- Provided tests to add (Done)
+
+Appendix — quick file notes
+---------------------------
+tokenizer.py
+- Well-structured tokenizer and Type enum. See above for suggested fixes: use splitlines, fix import, and print formatting.
+
+parser.py
+- Reasonable recursive-descent parser for a simple pseudocode language. Key changes: robust end-of-input handling, safer keyword stripping, and explicit errors on unmatched control tokens.
+
+upload.py
+- Simple and correct file loader; recommend adding encoding, small docstring fixes, and possibly a `read_text` wrapper for test injection.
+
+If you want, I can now:
+- make the safe edits (small, low-risk) and run the unit tests in `tests/` (I'll run them and report results), or
+- create unit tests that exercise the failures identified above.
+
+End of report.
+

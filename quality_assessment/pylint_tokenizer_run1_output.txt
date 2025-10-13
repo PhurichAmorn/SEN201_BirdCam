@@ -1,0 +1,10 @@
+************* Module tokenizer
+src/tokenizer.py:72:0: C0303: Trailing whitespace (trailing-whitespace)
+src/tokenizer.py:83:8: W0621: Redefining name 'tokens' from outer scope (line 177) (redefined-outer-name)
+src/tokenizer.py:146:27: W0621: Redefining name 'tokens' from outer scope (line 177) (redefined-outer-name)
+src/tokenizer.py:166:4: C0103: Constant name "sample_code" doesn't conform to UPPER_CASE naming style (invalid-name)
+src/tokenizer.py:182:0: W0105: String statement has no effect (pointless-string-statement)
+
+------------------------------------------------------------------
+Your code has been rated at 9.24/10
+
