@@ -3,4 +3,7 @@ test
 unused
 .pytest_cache
 *.py[cod]
-upload_doc.md
+flowchart_generator.py
+export_flowchart.py
+flowchart_general.png
+test_upload.py
