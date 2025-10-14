@@ -9,3 +9,4 @@ flowchart_generator.py
 export_flowchart.py
 flowchart_general.png
 test_upload.py
+.vscode/
