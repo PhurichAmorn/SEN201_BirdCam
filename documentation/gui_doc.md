@@ -1,6 +1,11 @@
-# Pseudocode to Flowchart Converter
+# Gui.py Documentation
+
+## Overview
 
 A GUI application for converting pseudocode files (`.psc`) to visual flowcharts using Python Tkinter.
+
+**Author:** Puttipong Srisuwantat (Non)
+**Date:** 01/10/2025
 
 ## Features
 
