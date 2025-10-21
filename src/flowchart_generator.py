@@ -20,26 +20,67 @@ class FlowchartBuilder:
         """
         self.tokens = tokens  # list - tokenized pseudocode input
         self.dot = Digraph("Flowchart", format="png")  # Digraph - graphviz diagram object
-        self.dot.attr(splines="ortho")
-        self.dot.attr(rankdir="TB", fontname="Arial", size="8,10")
-        self.dot.attr('node', style='rounded,filled', fillcolor='white')
+        
+        # Graph settings for better readability
+        self.dot.attr(rankdir="TB")  # Top to bottom layout
+        self.dot.attr(splines="ortho")  # Orthogonal edges
+        self.dot.attr(nodesep="0.8")  # Horizontal spacing between nodes
+        self.dot.attr(ranksep="0.8")  # Vertical spacing between ranks
+        
+        # Font settings
+        self.dot.attr(fontname="Arial")
+        self.dot.attr(fontsize="12")
+        
+        # Node default styling
+        self.dot.attr('node', 
+                      style='filled',
+                      fontname="Arial",
+                      fontsize="11",
+                      margin="0.2,0.1")
+        
+        # Edge default styling
+        self.dot.attr('edge',
+                      fontname="Arial",
+                      fontsize="10",
+                      fontcolor="blue")
+        
         self.node_count = 0  # int - counter for unique node naming
         self.stack = []  # list - stack to track nested control structures
         self.last_node = None  # str - name of the most recently created node
 
-    def new_node(self, label, shape="rectangle", color="lightgrey"):
+    def new_node(self, label, shape="box", color="lightgrey"):
         """
         Create a new Graphviz node
         Arg:
             label - str, the text to display in the node
-            shape - str, the shape of the node (default: "rectangle")
+            shape - str, the shape of the node (default: "box")
             color - str, the fill color of the node (default: "lightgrey")
         Return:
             str - the unique name identifier of the created node
         """
         self.node_count += 1
         name = f"n{self.node_count}"  # str - unique node identifier
-        self.dot.node(name, label, shape=shape, fillcolor=color)
+        
+        # Customize node appearance based on shape
+        if shape == "diamond":
+            self.dot.node(name, label, 
+                         shape=shape, 
+                         fillcolor=color,
+                         width="2.0",
+                         height="1.2")
+        elif shape == "circle":
+            self.dot.node(name, label, 
+                         shape="circle", 
+                         fillcolor=color,
+                         width="0.8",
+                         height="0.8",
+                         fixedsize="true")
+        else:
+            self.dot.node(name, label, 
+                         shape=shape, 
+                         fillcolor=color,
+                         style="rounded,filled")
+        
         return name
 
     def connect(self, src, dst, label=""):
@@ -51,7 +92,10 @@ class FlowchartBuilder:
             label - str, optional label for the edge (default: "")
         """
         if src and dst:
-            self.dot.edge(src, dst, label=label)
+            if label:
+                self.dot.edge(src, dst, xlabel=label, fontcolor="blue", fontsize="10")
+            else:
+                self.dot.edge(src, dst)
 
     def add_flow(self):
         """
@@ -59,80 +103,112 @@ class FlowchartBuilder:
         Return:
             Digraph - the complete flowchart diagram object
         """
-        start_node = self.new_node("Start", shape="circle", color="lightyellow")  # str - starting node identifier
+        start_node = self.new_node("Start", shape="circle", color="#90EE90")
         self.last_node = start_node
 
+        # For IF blocks we'll store: {'type':'IF','node':node,'indent':indent,'else_seen':False,'merge':None}
         for i, token in enumerate(self.tokens):
-            ttype = token["type"].upper().strip()  # str - token type in uppercase
-            text = token.get("text", token.get("content", "")).strip()  # str - token text content
-            indent = token.get("indent", 0)  # int - indentation level of the token
+            ttype = token["type"].upper().strip()
+            text = token.get("text", token.get("content", "")).strip()
+            indent = token.get("indent", 0)
 
-            # Determine node shape and color by type
+            # CONTROL-STRUCTURES
             if ttype in {"IF", "WHILE", "FOR"}:
-                node = self.new_node(text, shape="diamond", color="lightblue")  # str - control structure node
+                node = self.new_node(text, shape="diamond", color="#87CEEB")
+                # connect from last node to this control node
                 self.connect(self.last_node, node)
-                
-                if ttype == "IF":
-                    # For IF statements, we need to handle the Yes/No branches
-                    self.stack.append((ttype, node, indent, self.last_node))
-                else:
-                    self.stack.append((ttype, node, indent))
-                self.last_node = node
 
-            elif ttype.startswith("END"):
-                # Match block ending (ENDIF, ENDFOR, ENDWHILE, etc.)
-                if self.stack:
-                    block_info = self.stack.pop()  # tuple - information about the control block
-                    block_type = block_info[0]  # str - type of control structure
-                    start_node = block_info[1]  # str - starting node of the control block
-                    
-                    if block_type == "IF":
-                        # For IF blocks, create a merge point after ENDIF
-                        merge_node = self.new_node("", shape="circle", color="white")  # str - merge point node
-                        self.connect(self.last_node, merge_node)
-                        
-                        # Connect the IF node's "No" branch to the merge point
-                        self.connect(start_node, merge_node, label="No")
-                        
-                        self.last_node = merge_node
-                    elif block_type in {"FOR", "WHILE"}:
-                        # Connect last action to block start to form a loop
-                        self.connect(self.last_node, start_node, label="Next")
-                        
-                        # Create exit point for loop
-                        exit_node = self.new_node("", shape="circle", color="white")  # str - loop exit node
-                        self.connect(start_node, exit_node, label="Exit")
-                        self.last_node = exit_node
+                if ttype == "IF":
+                    self.stack.append({
+                        "type": "IF",
+                        "node": node,
+                        "indent": indent,
+                        "else_seen": False,
+                        "merge": None
+                    })
+                else:
+                    # loops: simpler entry
+                    self.stack.append({
+                        "type": ttype,
+                        "node": node,
+                        "indent": indent
+                    })
+                self.last_node = node
                 continue
 
+            # ENDINGS BLOCKS
+            elif ttype.startswith("END"):
+                if not self.stack:
+                    continue
+                block = self.stack.pop()
+                btype = block["type"]
+                start_node = block["node"]
+
+                if btype == "IF":
+                    # create merge point (if not already created at ELSE)
+                    merge_node = block.get("merge")
+                    if merge_node is None:
+                        merge_node = self.new_node("", shape="circle", color="white")
+                    # connect whatever the last action was to the merge
+                    self.connect(self.last_node, merge_node)
+                    if not block.get("else_seen", False):
+                        self.connect(start_node, merge_node, label="No")
+                    # Set last_node to merge so next nodes continue from merge point
+                    self.last_node = merge_node
+                elif btype in {"FOR", "WHILE"}:
+                    # loop: connect last action back to loop start (Loop) and create an exit
+                    self.connect(self.last_node, start_node, label="Loop")
+                    exit_node = self.new_node("", shape="circle", color="white")
+                    self.connect(start_node, exit_node, label="Exit")
+                    self.last_node = exit_node
+                continue
+
+            # ELSE handling
             elif ttype == "ELSE":
-                # Handle else branch
-                if self.stack and self.stack[-1][0] == "IF":
-                    if_node = self.stack[-1][1]  # str - IF statement node identifier
-                    # Mark that we're in else branch
+                if self.stack and self.stack[-1]["type"] == "IF":
+                    block = self.stack[-1]
+                    if_node = block["node"]
+
+                    # Create merge node now
+                    merge_node = block.get("merge")
+                    if merge_node is None:
+                        merge_node = self.new_node("", shape="circle", color="white")
+                        block["merge"] = merge_node
+
+                    # Connect current last action to merge
+                    self.connect(self.last_node, merge_node)
+
+                    block["else_seen"] = True
                     self.last_node = if_node
                 continue
 
+            # REGULAR OPERATIONS (SET, PRINT, etc.)
             else:
-                # Regular operation (SET, PRINT, RETURN, CALL, etc.)
-                node = self.new_node(text, shape="rectangle", color="lightgrey")  # str - operation node
-                
-                # Check if we're right after an IF statement
-                if self.stack and self.stack[-1][0] == "IF" and i > 0:
-                    prev_token = self.tokens[i-1]  # dict - previous token in the list
-                    if prev_token["type"].upper() == "IF":
-                        # This is the first statement in the IF block (Yes branch)
-                        if_node = self.stack[-1][1]  # str - IF statement node identifier
+                if ttype == "PRINT":
+                    node = self.new_node(text, shape="box", color="#FFD700")
+                elif ttype == "SET":
+                    node = self.new_node(text, shape="box", color="#F0E68C")
+                else:
+                    node = self.new_node(text, shape="box", color="#D3D3D3")
+
+                # Special-case: if the last token was an IF, this node is the first statement of the Yes branch
+                if self.stack and self.stack[-1]["type"] == "IF" and i > 0:
+                    prev_token = self.tokens[i-1]
+                    if prev_token["type"].upper().strip() == "IF":
+                        if_node = self.stack[-1]["node"]
                         self.connect(if_node, node, label="Yes")
+                    elif prev_token["type"].upper().strip() == "ELSE":
+                        if_node = self.stack[-1]["node"]
+                        self.connect(if_node, node, label="No")
                     else:
                         self.connect(self.last_node, node)
                 else:
                     self.connect(self.last_node, node)
-                
                 self.last_node = node
+                continue
 
         # Add End node
-        end_node = self.new_node("End", shape="circle", color="lightyellow")  # str - ending node identifier
+        end_node = self.new_node("End", shape="circle", color="#FFB6C1")
         self.connect(self.last_node, end_node)
 
         return self.dot
@@ -149,14 +225,50 @@ class FlowchartBuilder:
 
 if __name__ == "__main__":
     # Example test tokens to demonstrate flowchart generation
-    tokens = [  # list - sample tokenized pseudocode
-        {"type": "SET", "text": "set total = 0", "indent": 0},
-        {"type": "FOR", "text": "for x in range 0 to 10", "indent": 0},
-        {"type": "IF", "text": "if x%2 equals 0", "indent": 1},
-        {"type": "SET", "text": "set total = total + x", "indent": 2},
+    tokens = [# list - sample tokenized pseudocode
+        # 1st test case
+        # {"type": "SET", "text": "set total = 0", "indent": 0},
+        # {"type": "FOR", "text": "for x in range 0 to 10", "indent": 0},
+        # {"type": "IF", "text": "if x%2 equals 0", "indent": 1},
+        # {"type": "SET", "text": "set total = total + x", "indent": 2},
+        # {"type": "ENDIF", "text": "endif", "indent": 1},
+        # {"type": "ENDFOR", "text": "endfor", "indent": 0},
+        # {"type": "PRINT", "text": 'print "Total: {total}"', "indent": 0},
+    
+        # 2nd testcase with nested FOR and WHILE loops
+        # {"type": "SET", "text": "set sum = 0", "indent": 0},
+        # {"type": "FOR", "text": "for i in range 1 to 5", "indent": 0},
+        # {"type": "FOR", "text": "for j in range 1 to 3", "indent": 1},
+        # {"type": "SET", "text": "set sum = sum + (i * j)", "indent": 2},
+        # {"type": "PRINT", "text": 'print "i={i}, j={j}, sum={sum}"', "indent": 2},
+        # {"type": "ENDFOR", "text": "endfor", "indent": 1},
+        # {"type": "ENDFOR", "text": "endfor", "indent": 0},
+        # {"type": "PRINT", "text": 'print "Final sum: {sum}"', "indent": 0},
+
+        # 3rd testcase with nested FOR loops and IF condition
+        # {"type": "SET", "text": "set count = 0", "indent": 0},
+        # {"type": "FOR", "text": "for row in range 1 to 10", "indent": 0},
+        # {"type": "FOR", "text": "for col in range 1 to 10", "indent": 1},
+        # {"type": "IF", "text": "if row equals col", "indent": 2},
+        # {"type": "SET", "text": "set count = count + 1", "indent": 3},
+        # {"type": "PRINT", "text": 'print "Diagonal: ({row},{col})"', "indent": 3},
+        # {"type": "ENDIF", "text": "endif", "indent": 2},
+        # {"type": "ENDFOR", "text": "endfor", "indent": 1},
+        # {"type": "ENDFOR", "text": "endfor", "indent": 0},
+        # {"type": "PRINT", "text": 'print "Total diagonal elements: {count}"', "indent": 0},
+
+        # 4th testcase nested if
+        {"type": "SET", "text": "set score = 85", "indent": 0},
+        {"type": "IF", "text": "if score >= 90", "indent": 0},
+        {"type": "PRINT", "text": 'print "Grade: A"', "indent": 1},
+        {"type": "ELSE", "text": "else", "indent": 0},
+        {"type": "IF", "text": "if score >= 80", "indent": 1},
+        {"type": "PRINT", "text": 'print "Grade: B"', "indent": 2},
+        {"type": "ELSE", "text": "else", "indent": 1},
+        {"type": "PRINT", "text": 'print "Grade: C or below"', "indent": 2},
         {"type": "ENDIF", "text": "endif", "indent": 1},
-        {"type": "ENDFOR", "text": "endfor", "indent": 0},
-        {"type": "PRINT", "text": 'print "Total: {total}"', "indent": 0},
+        {"type": "ENDIF", "text": "endif", "indent": 0},
+
     ]
 
     fc = FlowchartBuilder(tokens)  # FlowchartBuilder - flowchart builder instance
