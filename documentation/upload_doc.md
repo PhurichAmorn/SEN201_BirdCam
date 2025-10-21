@@ -1,4 +1,4 @@
-# Upload.py Documentation
+# upload.py Documentation
 
 ## Overview
 
@@ -82,6 +82,5 @@ else:
 
 ## Error Handling
 
-The module have basic error handling:
 - `FileNotFoundError` is raised when the program load the file that does not exist
 - The file must have a suffix as .psc else the error `ValueError` will be raised
