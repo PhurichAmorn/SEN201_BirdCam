@@ -4,13 +4,17 @@ gui.py
     pseudocode editor, and interactive flowchart viewer
 
 Author: Puttipong Srisuwantat (Non)
-Date: 1 Oct 2025
+Date: 01/10/2025
 '''
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
 import os
 from upload import FileLoader
+from tokenizer import PseudocodeTokenizer
+from parser import PseudocodeParser
+from flowchart_generator import FlowchartBuilder
+from export_flowchart import FlowchartExporter
 try:
     from PIL import Image, ImageTk, ImageDraw
     import cairosvg
@@ -454,7 +458,6 @@ class FlowchartTab:
     
     '''
     Generates flowchart from pseudocode content
-    This is a placeholder for the actual flowchart generation logic
     '''
     def _generate_flowchart(self):
         content = self.text_editor.get(1.0, tk.END).strip()  # get text content without trailing newline
@@ -463,44 +466,74 @@ class FlowchartTab:
             messagebox.showwarning("Warning", "Please enter some pseudocode first!")
             return
         
-        # Clear previous flowchart
-        self.flowchart_canvas.delete("all")
-        
-        # Placeholder flowchart generation
-        # TODO: Implement actual pseudocode parsing and flowchart generation
-        self._draw_sample_flowchart()
-        
-        messagebox.showinfo("Generated", "Flowchart generated!")
-    
-    '''
-    Draws a sample flowchart for demonstration
-    '''
-    # TODO: Replace this with actual flowchart drawing logic
-    def _draw_sample_flowchart(self):
-        # Set canvas scroll region
-        self.flowchart_canvas.configure(scrollregion=(0, 0, 800, 600))
-        
-        # Start oval
-        self.flowchart_canvas.create_oval(350, 50, 450, 100, fill="lightgreen", outline="black", width=2)
-        self.flowchart_canvas.create_text(400, 75, text="Start", font=("Arial", 10, "bold"))
-        
-        # Process rectangle
-        self.flowchart_canvas.create_rectangle(325, 150, 475, 200, fill="lightblue", outline="black", width=2)
-        self.flowchart_canvas.create_text(400, 175, text="Process", font=("Arial", 10))
-        
-        # Decision diamond
-        points = [400, 250, 475, 300, 400, 350, 325, 300]  # diamond coordinates
-        self.flowchart_canvas.create_polygon(points, fill="lightyellow", outline="black", width=2)
-        self.flowchart_canvas.create_text(400, 300, text="Decision?", font=("Arial", 10))
-        
-        # End oval
-        self.flowchart_canvas.create_oval(350, 400, 450, 450, fill="lightcoral", outline="black", width=2)
-        self.flowchart_canvas.create_text(400, 425, text="End", font=("Arial", 10, "bold"))
-        
-        # Connecting lines
-        self.flowchart_canvas.create_line(400, 100, 400, 150, arrow=tk.LAST, width=2)
-        self.flowchart_canvas.create_line(400, 200, 400, 250, arrow=tk.LAST, width=2)
-        self.flowchart_canvas.create_line(400, 350, 400, 400, arrow=tk.LAST, width=2)
+        try:
+            # Tokenize the pseudocode
+            tokenizer = PseudocodeTokenizer()
+            tokens = tokenizer.tokenize_text(content)
+            
+            # Parse tokens into AST
+            parser = PseudocodeParser()
+            ast = parser.parse(tokens)
+            
+            # Generate flowchart using tokens
+            flowchart_builder = FlowchartBuilder(tokens)
+            dot = flowchart_builder.add_flow()
+            
+            # Create a temporary file for the flowchart
+            import tempfile
+            
+            temp_dir = tempfile.gettempdir()
+            temp_file = os.path.join(temp_dir, "temp_flowchart")
+            
+            # Render the flowchart to a PNG file
+            dot.render(temp_file, cleanup=True)
+            temp_png = temp_file + ".png"
+            
+            # Clear previous flowchart
+            self.flowchart_canvas.delete("all")
+            
+            # Open and resize image to fit canvas
+            image = Image.open(temp_png)
+            canvas_width = self.flowchart_canvas.winfo_width()
+            canvas_height = self.flowchart_canvas.winfo_height()
+            
+            # Calculate scaling to fit image in canvas while maintaining aspect ratio
+            img_width, img_height = image.size
+            width_ratio = canvas_width / img_width
+            height_ratio = canvas_height / img_height
+            scale = min(width_ratio, height_ratio) * 0.9  # 90% of available space
+            
+            new_width = int(img_width * scale)
+            new_height = int(img_height * scale)
+            
+            image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+            # Convert to PhotoImage and store reference to prevent garbage collection
+            self.flowchart_image = ImageTk.PhotoImage(image)
+            
+            # Calculate position to center the image
+            x = (canvas_width - new_width) // 2
+            y = (canvas_height - new_height) // 2
+            
+            # Display image on canvas
+            self.flowchart_canvas.create_image(x, y, image=self.flowchart_image, anchor="nw")
+            
+            # Update canvas scroll region
+            self.flowchart_canvas.configure(scrollregion=self.flowchart_canvas.bbox("all"))
+            
+            # Export the flowchart
+            exporter = FlowchartExporter(tokens)
+            exporter.export_file(default_name="flowchart")
+            
+            # Clean up temporary file
+            try:
+                os.remove(temp_png)
+            except:
+                pass
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to generate flowchart: {str(e)}")
+            return
     
     '''
     Starts panning operation on flowchart canvas
