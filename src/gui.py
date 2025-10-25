@@ -4,13 +4,17 @@ gui.py
     pseudocode editor, and interactive flowchart viewer
 
 Author: Puttipong Srisuwantat (Non)
-Date: 1 Oct 2025
+Date: 01/10/2025
 '''
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
 import os
 from upload import FileLoader
+from tokenizer import PseudocodeTokenizer
+from parser import PseudocodeParser
+from flowchart_generator import FlowchartBuilder
+from export_flowchart import FlowchartExporter
 try:
     from PIL import Image, ImageTk, ImageDraw
     import cairosvg
@@ -454,53 +458,101 @@ class FlowchartTab:
     
     '''
     Generates flowchart from pseudocode content
-    This is a placeholder for the actual flowchart generation logic
     '''
     def _generate_flowchart(self):
-        content = self.text_editor.get(1.0, tk.END).strip()  # get text content without trailing newline
+        content = self.text_editor.get(1.0, tk.END).strip()
         
         if not content:
             messagebox.showwarning("Warning", "Please enter some pseudocode first!")
             return
         
-        # Clear previous flowchart
-        self.flowchart_canvas.delete("all")
+        try:
+            # Tokenize the pseudocode
+            tokenizer = PseudocodeTokenizer()
+            tokens = []
+            for token in tokenizer.tokenize_text(content):
+                # Convert Token namedtuple to dictionary
+                token_dict = {
+                    "type": token.type.name,  # Convert enum to string
+                    "text": token.value,
+                    "indent": token.indent_level
+                }
+                tokens.append(token_dict)
+            
+            # Generate flowchart using tokens
+            flowchart_builder = FlowchartBuilder(tokens)
+            dot = flowchart_builder.add_flow()
+            
+            # Create a temporary file for the flowchart display
+            import tempfile
+            temp_dir = tempfile.gettempdir()
+            temp_file = os.path.join(temp_dir, "temp_flowchart")
+            
+            # Render the flowchart to a PNG file for display
+            dot.render(temp_file, cleanup=True)
+            temp_png = temp_file + ".png"
+            
+            # Export the flowchart using FlowchartExporter
+            exporter = FlowchartExporter(tokens)
+            if self.file_path:
+                # Use the same name as the pseudocode file but with .png extension
+                default_name = os.path.splitext(os.path.basename(self.file_path))[0]
+            else:
+                default_name = "flowchart"
+            exporter.export_file(default_name=default_name)
+            
+            # Display the flowchart in the canvas
+            self.flowchart_canvas.delete("all")
+            
+            # Load and display the image
+            image = Image.open(temp_png)
+            canvas_width = self.flowchart_canvas.winfo_width()
+            canvas_height = self.flowchart_canvas.winfo_height()
+            
+            # Calculate scaling to fit image in canvas while maintaining aspect ratio
+            img_width, img_height = image.size
+            width_ratio = canvas_width / img_width
+            height_ratio = canvas_height / img_height
+            scale = min(width_ratio, height_ratio) * 0.9
+            
+            new_width = int(img_width * scale)
+            new_height = int(img_height * scale)
+            
+            # Resize image
+            image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+            # Convert to PhotoImage and store reference
+            self.flowchart_image = ImageTk.PhotoImage(image)
+            
+            # Calculate center position
+            x = max(0, (canvas_width - new_width) // 2)
+            y = max(0, (canvas_height - new_height) // 2)
+            
+            # Create image on canvas
+            self.image_item = self.flowchart_canvas.create_image(
+                x, y,
+                image=self.flowchart_image,
+                anchor="nw"
+            )
+            
+            # Set initial scroll region
+            bbox = self.flowchart_canvas.bbox("all")
+            if bbox:
+                self.flowchart_canvas.configure(scrollregion=bbox)
+            
+            # Store the current image path for zoom operations
+            self.current_image_path = temp_png
+            self.zoom_scale = 1.0  # Reset zoom scale
+            
+            # Clean up temporary file
+            try:
+                os.remove(temp_png)
+            except:
+                pass
         
-        # Placeholder flowchart generation
-        # TODO: Implement actual pseudocode parsing and flowchart generation
-        self._draw_sample_flowchart()
-        
-        messagebox.showinfo("Generated", "Flowchart generated!")
-    
-    '''
-    Draws a sample flowchart for demonstration
-    '''
-    # TODO: Replace this with actual flowchart drawing logic
-    def _draw_sample_flowchart(self):
-        # Set canvas scroll region
-        self.flowchart_canvas.configure(scrollregion=(0, 0, 800, 600))
-        
-        # Start oval
-        self.flowchart_canvas.create_oval(350, 50, 450, 100, fill="lightgreen", outline="black", width=2)
-        self.flowchart_canvas.create_text(400, 75, text="Start", font=("Arial", 10, "bold"))
-        
-        # Process rectangle
-        self.flowchart_canvas.create_rectangle(325, 150, 475, 200, fill="lightblue", outline="black", width=2)
-        self.flowchart_canvas.create_text(400, 175, text="Process", font=("Arial", 10))
-        
-        # Decision diamond
-        points = [400, 250, 475, 300, 400, 350, 325, 300]  # diamond coordinates
-        self.flowchart_canvas.create_polygon(points, fill="lightyellow", outline="black", width=2)
-        self.flowchart_canvas.create_text(400, 300, text="Decision?", font=("Arial", 10))
-        
-        # End oval
-        self.flowchart_canvas.create_oval(350, 400, 450, 450, fill="lightcoral", outline="black", width=2)
-        self.flowchart_canvas.create_text(400, 425, text="End", font=("Arial", 10, "bold"))
-        
-        # Connecting lines
-        self.flowchart_canvas.create_line(400, 100, 400, 150, arrow=tk.LAST, width=2)
-        self.flowchart_canvas.create_line(400, 200, 400, 250, arrow=tk.LAST, width=2)
-        self.flowchart_canvas.create_line(400, 350, 400, 400, arrow=tk.LAST, width=2)
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to generate flowchart: {str(e)}")
+            return
     
     '''
     Starts panning operation on flowchart canvas
@@ -526,18 +578,56 @@ class FlowchartTab:
         event - mouse wheel event
     '''
     def _zoom_canvas(self, event):
-        # Determine zoom direction
-        if event.delta > 0 or event.num == 4:
-            zoom_factor = 1.1  # zoom in
-        else:
-            zoom_factor = 0.9  # zoom out
+        if not hasattr(self, 'flowchart_image'):
+            return  # No image to zoom
+            
+        # Get the current mouse position
+        x = self.flowchart_canvas.canvasx(event.x)
+        y = self.flowchart_canvas.canvasy(event.y)
         
-        # Apply zoom
-        self.zoom_scale *= zoom_factor
-        self.flowchart_canvas.scale("all", event.x, event.y, zoom_factor, zoom_factor)
+        # Determine zoom factor
+        if event.delta < 0 or event.num == 5:  # zoom out
+            self.zoom_scale = max(0.1, self.zoom_scale * 0.9)
+        elif event.delta > 0 or event.num == 4:  # zoom in
+            self.zoom_scale = min(5.0, self.zoom_scale * 1.1)
+        else:
+            return
+            
+        # Get canvas dimensions
+        canvas_width = self.flowchart_canvas.winfo_width()
+        canvas_height = self.flowchart_canvas.winfo_height()
+        
+        # Get original image size
+        original_width = self.flowchart_image.width()
+        original_height = self.flowchart_image.height()
+        
+        # Calculate new dimensions
+        new_width = int(original_width * self.zoom_scale)
+        new_height = int(original_height * self.zoom_scale)
+        
+        # Resize image
+        image = Image.open(self.current_image_path)  # Keep track of current image path
+        image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        
+        # Update PhotoImage
+        self.flowchart_image = ImageTk.PhotoImage(image)
+        
+        # Calculate center position
+        x = max(0, (canvas_width - new_width) // 2)
+        y = max(0, (canvas_height - new_height) // 2)
+        
+        # Update image on canvas
+        self.flowchart_canvas.delete("all")
+        self.image_item = self.flowchart_canvas.create_image(
+            x, y,
+            image=self.flowchart_image,
+            anchor="nw"
+        )
         
         # Update scroll region
-        self.flowchart_canvas.configure(scrollregion=self.flowchart_canvas.bbox("all"))
+        bbox = self.flowchart_canvas.bbox("all")
+        if bbox:
+            self.flowchart_canvas.configure(scrollregion=bbox)
 
 '''
 Main application class for pseudocode to flowchart converter
@@ -1019,4 +1109,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
