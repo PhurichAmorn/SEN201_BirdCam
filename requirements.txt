@@ -1,3 +1,6 @@
 # Runtime dependencies (none required for runtime in this repo)
 # Keep this file for packages your application needs in production.
 graphviz
+pyinstaller
+pillow
+cairosvg
