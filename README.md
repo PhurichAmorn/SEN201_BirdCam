@@ -23,7 +23,23 @@ This project focuses on converting pseudocode to flowcharts as part of the Softw
 
 ## Requirements
 
-This project includes a **[BIRDCAM_REQUIREMENT](requirements.txt)** file at the repository root which lists the Python packages needed to run and test the project.
+### Using Conda Environment (Recommended for macOS)
+
+This project includes an `environment.yml` file that sets up all required dependencies including proper GUI support for macOS.
+
+To create and use the conda environment:
+
+```bash
+# Create the environment (first time only)
+conda env create -f environment.yml
+
+# Activate the environment
+conda activate birdcam
+```
+
+### Using pip
+
+Alternatively, this project includes a **[BIRDCAM_REQUIREMENT](requirements.txt)** file at the repository root which lists the Python packages needed to run and test the project.
 
 To install the required packages into your active Python environment, run:
 
@@ -33,7 +49,7 @@ python -m pip install -r requirements.txt
 
 ### Development dependencies
 
-Development and test tools should be kept separate from runtime dependencies. Install requirements from `dev-requirements.txt` to get packages used only during development. 
+Development and test tools should be kept separate from runtime dependencies. Install requirements from `dev-requirements.txt` to get packages used only during development.
 
 Install development dependencies with:
 
@@ -49,6 +65,26 @@ pytest -q
 ```
 
 Keep `requirements.txt` for packages required by the application at runtime and `dev-requirements.txt` for tools used during development.
+
+## Running the Application
+
+After setting up the environment, run the GUI application:
+
+```bash
+# Activate conda environment first
+conda activate birdcam
+
+# Run the GUI (macOS)
+pythonw src/gui.py
+```
+
+**Note for macOS users:** Use `pythonw` instead of `python` to ensure the GUI windows appear properly in the foreground with full macOS integration.
+
+**Alternative:** You can also use the provided shell script:
+
+```bash
+./run_gui.sh
+```
 
 ## Running tests
 
