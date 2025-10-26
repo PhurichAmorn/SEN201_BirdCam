@@ -1,0 +1,27 @@
+************* Module parser
+src/parser.py:13:54: C0303: Trailing whitespace (trailing-whitespace)
+src/parser.py:102:0: C0301: Line too long (110/100) (line-too-long)
+src/parser.py:281:45: C0303: Trailing whitespace (trailing-whitespace)
+src/parser.py:15:0: W0105: String statement has no effect (pointless-string-statement)
+src/parser.py:34:4: W0107: Unnecessary pass statement (unnecessary-pass)
+src/parser.py:32:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:37:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:44:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:51:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:58:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:67:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:75:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:83:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:91:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:99:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:109:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:119:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+src/parser.py:196:8: R1705: Unnecessary "else" after "return", remove the "else" and de-indent the code inside it (no-else-return)
+src/parser.py:168:4: R0911: Too many return statements (10/6) (too-many-return-statements)
+src/parser.py:356:4: R0912: Too many branches (15/12) (too-many-branches)
+src/parser.py:411:4: C0103: Constant name "sample_code" doesn't conform to UPPER_CASE naming style (invalid-name)
+src/parser.py:436:0: W0105: String statement has no effect (pointless-string-statement)
+
+------------------------------------------------------------------
+Your code has been rated at 9.07/10 (previous run: 8.98/10, +0.08)
+

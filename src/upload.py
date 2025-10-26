@@ -8,6 +8,7 @@ Date: 03/10/2025
 '''
 
 import os
+from tkinter import filedialog, Tk
 
 class FileLoader:
     """
@@ -37,12 +38,33 @@ class FileLoader:
 
         return self.content
 
+    def load_file_dialog(self) -> str:
+        """
+        Open a file dialog to select a .psc file and load it.
+        """
+        # Hide main Tk window
+        root = Tk()
+        root.withdraw()
+
+        # Open file dialog for .psc files
+        file_path = filedialog.askopenfilename(
+            title="Select a pseudocode file",
+            filetypes=(("Pseudocode files", "*.psc"),), # only allow .psc file
+        )
+        root.destroy()
+
+        if not file_path:
+            print("No file selected.")
+            return ""
+
+        return self.load_file(file_path)
+
 if __name__ == "__main__":
     # Test the file loader
     example_filepath = "../pseudo_example.psc"
 
     loader = FileLoader()
-    code = loader.load_file(example_filepath)
+    code = loader.load_file_dialog()
 
     print(code)
 
