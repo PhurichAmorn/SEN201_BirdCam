@@ -1,6 +1,7 @@
 # Runtime dependencies (none required for runtime in this repo)
 # Keep this file for packages your application needs in production.
 graphviz
-pyinstaller
-pillow
-cairosvg
+pillow>=10.0.0
+cairosvg>=2.7.0
+cairocffi>=1.6.0
+graphviz>=0.20.0
