@@ -16,7 +16,6 @@ dist/
 packaging/
 
 # Temporary files
-*.png
 *.svg
 !assets/*.svg
 !src/Upload.svg
