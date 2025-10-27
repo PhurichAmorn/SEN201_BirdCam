@@ -20,3 +20,4 @@ dist/
 *.svg
 !assets/*.svg
 !src/Upload.svg
+dmg_contents/

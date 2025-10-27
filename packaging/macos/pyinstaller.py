@@ -17,16 +17,28 @@ Requirements:
 
 import PyInstaller.__main__
 import os
+import stat
+import glob
 
-# Get conda environment path
+import sys
 conda_prefix = os.environ.get('CONDA_PREFIX', '')
 
-# If CONDA_PREFIX is not set or points to base environment, use fixed path
+if not conda_prefix or not os.path.exists(os.path.join(conda_prefix, 'bin', 'dot')):
+    # Try to get environment from current Python executable
+    python_path = sys.executable
+    if 'envs' in python_path:
+        # Extract environment path from Python executable
+        # e.g., /path/to/miniconda3/envs/birdcam/bin/python -> /path/to/miniconda3/envs/birdcam
+        conda_prefix = os.path.dirname(os.path.dirname(python_path))
+
 # Uncomment and modify the line below if you need to specify a custom path:
 # conda_prefix = '/Users/YOUR_USERNAME/miniconda3/envs/birdcam'
 
-if not conda_prefix:
+if not conda_prefix or not os.path.exists(os.path.join(conda_prefix, 'bin', 'dot')):
     conda_prefix = os.path.expanduser('~/miniconda3/envs/birdcam')
+
+print(f"Detected conda environment: {conda_prefix}")
+print(f"Checking for dot at: {os.path.join(conda_prefix, 'bin', 'dot')}")
 
 args = [
     '--name=BirdCam',
@@ -97,4 +109,22 @@ if conda_prefix:
         if os.path.exists(lib_path):
             args.insert(-1, f'--add-binary={lib_path}:.')
 
+# Run PyInstaller
 PyInstaller.__main__.run(args)
+
+# Post-build: Fix permissions on dot executable
+print("\nFixing permissions on bundled executables...")
+app_path = 'dist/BirdCam.app'
+
+if os.path.exists(app_path):
+    # Find all 'dot' executables in the bundle
+    for dot_path in glob.glob(f'{app_path}/**/dot', recursive=True):
+        try:
+            # Add execute permission
+            st = os.stat(dot_path)
+            os.chmod(dot_path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+            print(f"  Fixed permissions: {dot_path}")
+        except Exception as e:
+            print(f"  Failed to fix permissions for {dot_path}: {e}")
+
+print("\nBuild complete! App location: dist/BirdCam.app")

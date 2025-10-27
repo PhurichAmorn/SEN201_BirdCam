@@ -80,11 +80,6 @@ pythonw src/gui.py
 
 **Note for macOS users:** Use `pythonw` instead of `python` to ensure the GUI windows appear properly in the foreground with full macOS integration.
 
-**Alternative:** You can also use the provided shell script:
-
-```bash
-./run_gui.sh
-```
 
 ## Running tests
 
@@ -93,3 +88,90 @@ Unit tests are in the `tests/` folder. To run them, execute:
 ```bash
 pytest -q
 ```
+
+---
+
+## Building & Distribution
+
+BirdCam can be packaged as a standalone macOS application and distributed as a `.dmg` installer. Users won't need to install Python, conda, or any dependencies - everything is bundled!
+
+### Quick Build Guide
+
+#### Option 1: Conda Build **Recommended**
+
+For users who already have conda environment set up.
+
+**Build:**
+```bash
+# Ensure conda environment is activated
+conda activate birdcam
+
+# Build the app
+pythonw packaging/macos/pyinstaller.py
+```
+
+#### Option 2: Portable Build (No Conda)
+
+Bundles all system dependencies for maximum portability. Requires Homebrew dependencies.
+
+**Setup (one-time):**
+```bash
+# Install system dependencies (macOS)
+brew install graphviz cairo
+```
+
+**Build:**
+```bash
+python packaging/macos/pyinstaller_portable.py
+```
+
+### Creating DMG Installer
+
+After building the app, create a DMG installer for distribution:
+
+```bash
+./packaging/macos/create_dmg.sh
+```
+
+This creates `BirdCam-Installer.dmg` (~34 MB) in the project root.
+
+### Build Outputs
+
+After building, you'll find:
+
+```
+dist/
+└── BirdCam.app              # Standalone application
+
+BirdCam-Installer.dmg        # DMG installer (distribute this!)
+```
+
+### Distribution
+
+**Give users:** `BirdCam-Installer.dmg`
+
+Users can simply:
+1. Download and open the DMG file
+2. Drag BirdCam.app to Applications folder
+3. Launch BirdCam - no dependencies needed!
+
+### Build Scripts Comparison
+
+| Script | Conda Required | Complexity | Best For |
+|--------|---------------|------------|----------|
+| `pyinstaller.py` | Yes | Medium | Conda users (recommended) |
+| `pyinstaller_portable.py` | No | High | Maximum portability, non-conda users |
+
+### Packaging Directory Structure
+
+```
+packaging/
+├── README.md                    # Packaging documentation
+└── macos/                       # macOS build scripts
+    ├── pyinstaller.py           # Conda-based build (recommended)
+    ├── pyinstaller_portable.py  # Portable build for non-conda users
+    ├── pyi_rth_graphviz.py      # PyInstaller runtime hook
+    └── create_dmg.sh            # Creates DMG installer
+```
+
+For detailed packaging documentation, see [packaging/README.md](packaging/README.md).
