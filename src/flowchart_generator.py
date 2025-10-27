@@ -7,6 +7,17 @@ Date: 07/10/2025
 """
 
 from graphviz import Digraph
+from typing import Optional
+
+
+class FlowchartError(Exception):
+    """Exception raised when flowchart generation fails due to invalid pseudocode structure"""
+
+    def __init__(self, message: str, token_index: Optional[int] = None):
+        self.message = message
+        self.token_index = token_index
+        super().__init__(
+            f"Flowchart error at token {token_index}: {message}" if token_index is not None else message)
 
 class FlowchartBuilder:
     """
@@ -138,10 +149,31 @@ class FlowchartBuilder:
 
             # ENDINGS BLOCKS
             elif ttype.startswith("END"):
+                # Validate that we have a matching opening block
                 if not self.stack:
-                    continue
-                block = self.stack.pop()
+                    raise FlowchartError(f"Unexpected {ttype} without matching opening block", i)
+
+                # Determine what type of END this is
+                expected_type = None
+                if ttype == "ENDIF":
+                    expected_type = "IF"
+                elif ttype == "ENDFOR":
+                    expected_type = "FOR"
+                elif ttype == "ENDWHILE":
+                    expected_type = "WHILE"
+                else:
+                    raise FlowchartError(f"Unknown END type: {ttype}", i)
+
+                # Check if the top of stack matches the expected type
+                block = self.stack[-1]
                 btype = block["type"]
+
+                if btype != expected_type:
+                    raise FlowchartError(
+                        f"Mismatched block ending: expected END{btype} but found {ttype}", i)
+
+                # Pop the block now that we've validated it
+                block = self.stack.pop()
                 start_node = block["node"]
 
                 if btype == "IF":
@@ -206,6 +238,14 @@ class FlowchartBuilder:
                     self.connect(self.last_node, node)
                 self.last_node = node
                 continue
+
+        # Validate that all blocks were properly closed
+        if self.stack:
+            unclosed_blocks = [block["type"] for block in self.stack]
+            raise FlowchartError(
+                f"Unclosed block(s): {', '.join(unclosed_blocks)}. "
+                f"Expected END{unclosed_blocks[-1]} before end of code."
+            )
 
         # Add End node
         end_node = self.new_node("End", shape="circle", color="#FFB6C1")
