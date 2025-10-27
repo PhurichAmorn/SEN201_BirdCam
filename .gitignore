@@ -13,7 +13,7 @@ flowchart_general.png
 build/
 dist/
 *.spec
-*.dmg
+packaging/
 
 # Temporary files
 *.png
