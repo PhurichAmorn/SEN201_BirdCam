@@ -174,4 +174,4 @@ packaging/
     └── create_dmg.sh            # Creates DMG installer
 ```
 
-For detailed packaging documentation, see [packaging/README.md](packaging/README.md).
+For detailed packaging documentation, see [packaging/README.md](packaging/macos//README.md).
